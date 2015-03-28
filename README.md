@@ -1,11 +1,11 @@
 # Threes!
 
-[Threes!](http://www.threesgame.com) is a game for iOS by [Asher](http://twitter.com/ashervo), [Greg](http://twitter.com/aeiowu), and [Jimmy](http://twitter.com/biggiantcircles).
+[Threes!](http://www.threesgame.com) is a game for iOS and Android by [Asher](http://twitter.com/ashervo), [Greg](http://twitter.com/aeiowu), and [Jimmy](http://twitter.com/biggiantcircles).
 
 ## Play!
 
     git clone https://github.com/harshjv/threes-c.git && cd threes-c
-	gcc -lm threes.c -o threes.out && clear && ./threes.out
+    gcc -lm threes.c -o threes.out && clear && ./threes.out
 
 ## Asciinema
 
