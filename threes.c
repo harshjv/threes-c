@@ -186,6 +186,7 @@ int addRandomTile() {
 
     board[r / 10][r % 10] = possible_values[rand() % sizev];
 
+    freeArray(cells);
     free(cells);
 
     return 1;
