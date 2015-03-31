@@ -5,7 +5,7 @@
 ## Play!
 
     git clone https://github.com/harshjv/threes-c.git && cd threes-c
-    gcc -lm threes.c -o threes.out && clear && ./threes.out
+    gcc threes.c -o threes.out -lm && clear && ./threes.out
 
 ## Asciinema
 
