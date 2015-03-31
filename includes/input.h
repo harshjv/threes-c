@@ -1,6 +1,8 @@
 #ifndef __CUSTOM_INPUT
 #define __CUSTOM_INPUT
 
+#include <termios.h>
+
 static struct termios old, new;
 
 void initTermios(int echo) {
