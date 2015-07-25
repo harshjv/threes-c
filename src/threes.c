@@ -1,20 +1,27 @@
+#include <sys/ioctl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include <unistd.h>
 
-#include "./includes/input.h"
-#include "./includes/array.h"
+#include "input.h"
+#include "array.h"
 
 int possible_values[] = { 1, 2, 3, 6 };
 int sizev = 4;
+int TILE_WIDTH = 10;
+int BLANK_WIDTH = 2;
+int TOTAL_WIDTH = (10 * 4) + (2 * 5);
 
 int** board;
 
 int background[] = { 69, 207, 255 };
 int foreground[] = { 255, 255, 0 };
 int shadow[] = { 63, 201, 11 };
+
+struct winsize window;
 
 int getColor(int colors[], int number) {
     switch(number) {
@@ -29,6 +36,11 @@ int getColor(int colors[], int number) {
     }
 }
 
+int intLength(int number) {
+    if(number == 0) return 1;
+    return floor(log10(abs(number))) + 1;
+}
+
 void colorReset() {
     printf("\e[m");
 }
@@ -37,21 +49,36 @@ void setColorScheme(int bg, int fg) {
     printf("\e[38;5;%d;48;5;%dm", fg, bg);
 }
 
+void blanks() {
+    printf("%*s", TILE_WIDTH, "");
+}
+
+void printCenter(char* str) {
+    printf("%*s%s", (int) ((window.ws_col - strlen(str))/2), " ", str);
+}
+
 void divider() {
     setColorScheme(getColor(background, 0), getColor(foreground, 0));
-    printf("  ");
+    printf("%*s", BLANK_WIDTH, "");
     colorReset();
 }
 
-void blanks() {
-    printf("         ");
+void centerBlank() {
+    printf("%*s", (window.ws_col - TOTAL_WIDTH)/2, "");
+    divider();
+}
+
+void printTileCenter(int number) {
+    int t;
+    t = TILE_WIDTH - intLength(number);
+    printf("%*s%d%*s", t - t/2, "", number, t/2, "");
 }
 
 void tileLine(int i) {
     int j;
     for(j = 0; j < 4; j++) {
         if(j == 0) {
-            divider();
+            centerBlank();
         }
         setColorScheme(getColor(background, board[i][j]), getColor(foreground, board[i][j]));
         blanks();
@@ -65,7 +92,7 @@ void shadowLine(int i) {
     int j;
     for(j = 0; j < 4; j++) {
         if(j == 0) {
-            divider();
+            centerBlank();
         }
         setColorScheme(getColor(shadow, board[i][j]), getColor(foreground, board[i][j]));
         blanks();
@@ -79,7 +106,7 @@ void dummyLine() {
     int j;
     for(j = 0; j < 4; j++) {
         if(j == 0) {
-            divider();
+            centerBlank();
         }
         setColorScheme(getColor(background, 0), getColor(foreground, 0));
         blanks();
@@ -89,22 +116,20 @@ void dummyLine() {
     printf("\n");
 }
 
-int intLength(int number) {
-    int i = 1;
-    while(number / 10 != 0) {
-        number /= 10;
-        i++;
-    }
-    return i;
+void clearScreen() {
+    printf("\e[1;1H\e[2J");
 }
 
 int drawBoard() {
     int i, j, k, t;
     char c;
-    char color[40], reset[] = "\e[m";
-    printf("\e[H");
+    clearScreen();
 
-    printf("                    ^____^                    \n\n");
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &window);
+
+    printf("\n");
+    printCenter("^____^");
+    printf("\n\n");
 
     for(i = 0; i < 4; i++) {
         if(i == 0) {
@@ -115,11 +140,11 @@ int drawBoard() {
         tileLine(i);
         for(j = 0; j < 4; j++) {
             if(j == 0) {
-                divider();
+                centerBlank();
+                // divider();
             }
             setColorScheme(getColor(background, board[i][j]), getColor(foreground, board[i][j]));
-            t = 9 - intLength(board[i][j]);
-            printf("%*s%d%*s", t - (t/2), "", board[i][j], t/2, "");
+            printTileCenter(board[i][j]);
             colorReset();
             divider();
         }
@@ -130,7 +155,9 @@ int drawBoard() {
         dummyLine();
     }
 
-    printf("    a(←), w(↑), d(→), s(↓) or q(quit)\n");
+    printf("\n");
+    printCenter("        a(←), w(↑), d(→), s(↓) or q(quit)");
+    printf("\n");
     return 1;
 }
 
@@ -192,20 +219,6 @@ int addRandomTile() {
     return 1;
 }
 
-int printBoard() {
-    int i, j;
-
-    for(i = 0; i < 4; i++) {
-        for(j = 0; j < 4; j++) {
-            printf("%4d\t", board[i][j]);
-        }
-        printf("\n");
-    }
-    printf("\n");
-
-    return 1;
-}
-
 void swap(int* current, int* next) {
     if(*current == 0) {
         *current = *next;
@@ -257,7 +270,8 @@ void moveRight() {
 int main() {
     Array* cells;
     char c;
-    int r, i, j, score = 0, t;
+    char scorestr[17];
+    unsigned int i, j, score = 0, t;
 
     srand(time(NULL));
 
@@ -272,7 +286,7 @@ int main() {
     addRandomTile();
     addRandomTile();
 
-    while(((r = addRandomTile()) != 0 && drawBoard()) && (c = getch()) != 'q') {
+    while((addRandomTile() != 0 && drawBoard()) && (c = getch()) != 'q') {
         switch(c) {
             case 'w':
                 moveUp();
@@ -295,10 +309,14 @@ int main() {
         }
     }
 
-    t = (41-7) - intLength(score);
-    printf("%*s%s%d%*s", t - (t/2), "", "Score: ", score, t/2, "");
+    sprintf(scorestr, "Score: %u", score);
 
-    printf("\n");
+    printf("\033[A\033[2K");
+    printCenter(scorestr);
+    printf("\n\n");
+
+    printCenter("Threes C (https://github.com/harshjv/threes-c)\n");
+    printCenter("Released under MIT license by Harsh Vakharia (@harshjv)\n");
 
     return 0;
 }
