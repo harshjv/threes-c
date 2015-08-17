@@ -15,6 +15,7 @@ OBJ = $(patsubst %, $(ODIR)/%, $(_OBJ))
 LIBS = -lm
 
 $(ODIR)/%.o: src/%.c $(DEPS)
+	mkdir -p $(ODIR)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 threes: $(OBJ)
