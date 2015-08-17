@@ -1,0 +1,4 @@
+script:
+- make
+
+sudo: false

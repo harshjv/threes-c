@@ -1,4 +1,4 @@
-# Threes C!
+# Threes C! [![Build Status](https://travis-ci.org/harshjv/threes-c.svg)](https://travis-ci.org/harshjv/threes-c)
 
 Threes C is a port of [Threes!](http://www.threesgame.com) game to C.
 
