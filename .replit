@@ -1,0 +1,2 @@
+language = "bash"
+run = "git clone https://github.com/harshjv/threes-c.git && cd threes-c && make run"
